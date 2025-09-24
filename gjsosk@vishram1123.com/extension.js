@@ -395,9 +395,6 @@ class Keyboard extends Dialog {
                 side = St.Side.BOTTOM;
                 break;
         }
-        this.oldBottomDragGesture = this.bottomDragGesture;
-        if (this.oldBottomDragGesture !== null && this.oldBottomDragGesture instanceof Clutter.Action)
-            global.stage.remove_action(this.oldBottomDragGesture);
         if (side != null) {
             const allowedModes = Shell.ActionMode.ALL & ~Shell.ActionMode.LOCK_SCREEN;
             const bottomDragGesture = new Shell.EdgeDragGesture({name: 'OSK show bottom drag',side: side});
@@ -447,9 +444,6 @@ class Keyboard extends Dialog {
 
     destroy() {
         Main.keyboard.maybeHandleEvent = this._oldMaybeHandleEvent
-        global.stage.remove_action_by_name('osk')
-        if (this.oldBottomDragGesture !== null && this.oldBottomDragGesture instanceof Clutter.Action)
-            global.stage.add_action(this.oldBottomDragGesture);
         if (this.textboxChecker !== null) {
             clearInterval(this.textboxChecker);
             this.textboxChecker = null;
