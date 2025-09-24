@@ -395,7 +395,7 @@ class Keyboard extends Dialog {
                 side = St.Side.BOTTOM;
                 break;
         }
-        this.oldBottomDragGesture = global.stage.get_action(bottomDragGesture);
+        this.oldBottomDragGesture = this.bottomDragGesture;
         if (this.oldBottomDragGesture !== null && this.oldBottomDragGesture instanceof Clutter.Action)
             global.stage.remove_action(this.oldBottomDragGesture);
         if (side != null) {
