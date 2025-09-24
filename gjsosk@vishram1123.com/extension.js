@@ -6,7 +6,6 @@ import St from 'gi://St';
 import Shell from 'gi://Shell';
 
 
-import * as EdgeDragAction from 'resource:///org/gnome/shell/ui/edgeDragAction.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -396,25 +395,28 @@ class Keyboard extends Dialog {
                 side = St.Side.BOTTOM;
                 break;
         }
-        this.oldBottomDragAction = global.stage.get_action('osk');
-        if (this.oldBottomDragAction !== null && this.oldBottomDragAction instanceof Clutter.Action)
-            global.stage.remove_action(this.oldBottomDragAction);
+        this.oldBottomDragGesture = global.stage.get_action(bottomDragGesture);
+        if (this.oldBottomDragGesture !== null && this.oldBottomDragGesture instanceof Clutter.Action)
+            global.stage.remove_action(this.oldBottomDragGesture);
         if (side != null) {
-            const mode = Shell.ActionMode.ALL & ~Shell.ActionMode.LOCK_SCREEN;
-            const bottomDragAction = new EdgeDragAction.EdgeDragAction(side, mode);
-            bottomDragAction.connect('activated', () => {
-                this.open(true);
-                this.openedFromButton = true;
-                this.closedFromButton = false;
-                this.gestureInProgress = false;
+            const allowedModes = Shell.ActionMode.ALL & ~Shell.ActionMode.LOCK_SCREEN;
+            const bottomDragGesture = new Shell.EdgeDragGesture({name: 'OSK show bottom drag',side: St.Side.BOTTOM});
+            bottomDragGesture.connect('may-recognize', () => {
+                return allowedModes & Main.actionMode;
             });
-            bottomDragAction.connect('progress', (_action, progress) => {
+            bottomDragGesture.connect('progress', (_action, progress) => {
                 if (!this.gestureInProgress)
                     this.open(false)
                 this.setOpenState(Math.min(Math.max(0, (progress / (side % 2 == 0 ? this.box.height : this.box.width)) * 100), 100))
                 this.gestureInProgress = true;
             });
-            bottomDragAction.connect('gesture-cancel', () => {
+            bottomDragGesture.connect('end', () => {
+                this.open(true);
+                this.openedFromButton = true;
+                this.closedFromButton = false;
+                this.gestureInProgress = false;
+            });
+            bottomDragGesture.connect('cancel', () => {
                 if (this.gestureInProgress) {
                     this.close()
                     this.openedFromButton = false;
@@ -423,10 +425,10 @@ class Keyboard extends Dialog {
                 this.gestureInProgress = false;
                 return Clutter.EVENT_PROPAGATE;
             });
-            global.stage.add_action_full('osk', Clutter.EventPhase.CAPTURE, bottomDragAction);
-            this.bottomDragAction = bottomDragAction;
+            global.stage.add_action(bottomDragGesture);
+            this.bottomDragGesture = bottomDragGesture;
         } else {
-            this.bottomDragAction = null;
+            this.bottomDragGesture = null;
         }
         this._oldMaybeHandleEvent = Main.keyboard.maybeHandleEvent
         Main.keyboard.maybeHandleEvent = (e) => {
@@ -446,8 +448,8 @@ class Keyboard extends Dialog {
     destroy() {
         Main.keyboard.maybeHandleEvent = this._oldMaybeHandleEvent
         global.stage.remove_action_by_name('osk')
-        if (this.oldBottomDragAction !== null && this.oldBottomDragAction instanceof Clutter.Action)
-            global.stage.add_action_full('osk', Clutter.EventPhase.CAPTURE, this.oldBottomDragAction)
+        if (this.oldBottomDragGesture !== null && this.oldBottomDragGesture instanceof Clutter.Action)
+            global.stage.add_action(this.oldBottomDragGesture);
         if (this.textboxChecker !== null) {
             clearInterval(this.textboxChecker);
             this.textboxChecker = null;
