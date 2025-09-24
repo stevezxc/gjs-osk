@@ -402,8 +402,6 @@ class Keyboard extends Dialog {
                 return allowedModes & Main.actionMode;
             });
             bottomDragGesture.connect('progress', (_action, progress) => {
-                if (!this.gestureInProgress)
-                    this.open(false)
                 this.setOpenState(Math.min(Math.max(0, (progress / (side % 2 == 0 ? this.box.height : this.box.width)) * 100), 100))
                 this.gestureInProgress = true;
             });
@@ -414,13 +412,10 @@ class Keyboard extends Dialog {
                 this.gestureInProgress = false;
             });
             bottomDragGesture.connect('cancel', () => {
-                if (this.gestureInProgress) {
-                    this.close()
-                    this.openedFromButton = false;
-                    this.closedFromButton = true;
-                }
+                this.close()
+                this.openedFromButton = false;
+                this.closedFromButton = true;
                 this.gestureInProgress = false;
-                return Clutter.EVENT_PROPAGATE;
             });
             global.stage.add_action(bottomDragGesture);
             this.bottomDragGesture = bottomDragGesture;
