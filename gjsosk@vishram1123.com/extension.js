@@ -400,7 +400,7 @@ class Keyboard extends Dialog {
             global.stage.remove_action(this.oldBottomDragGesture);
         if (side != null) {
             const allowedModes = Shell.ActionMode.ALL & ~Shell.ActionMode.LOCK_SCREEN;
-            const bottomDragGesture = new Shell.EdgeDragGesture({name: 'OSK show bottom drag',side: St.Side.BOTTOM});
+            const bottomDragGesture = new Shell.EdgeDragGesture({name: 'OSK show bottom drag',side: side});
             bottomDragGesture.connect('may-recognize', () => {
                 return allowedModes & Main.actionMode;
             });
